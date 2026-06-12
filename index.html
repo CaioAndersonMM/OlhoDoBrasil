@@ -85,6 +85,11 @@
       <h2>Simulador de Votação</h2>
       <label for="tema">Tema:</label>
       <select id="tema"></select>
+      <label for="quorum">Quórum:</label>
+      <select id="quorum">
+        <option value="simples">Maioria simples (50% + 1)</option>
+        <option value="tresquintos">3/5 (PEC)</option>
+      </select>
       <button type="button" id="simular">Simular</button>
       <div id="resultado" aria-live="polite"></div>
     </section>
@@ -158,6 +163,7 @@
 
     function simularVotacao() {
       const tema = document.getElementById("tema").value;
+      const quorum = document.getElementById("quorum").value;
       const apoio = temas[tema];
 
       const resultado = casas.map((casa) => {
@@ -166,13 +172,17 @@
           casa.inclinacao.centro * apoio.centro +
           casa.inclinacao.direita * apoio.direita
         );
-        const minimo = Math.floor(casa.total / 2) + 1;
+        const minimo = quorum === "tresquintos"
+          ? Math.ceil(casa.total * 0.6)
+          : Math.floor(casa.total / 2) + 1;
         const aprovado = votosFavor >= minimo;
         return { casa: casa.nome, votosFavor, minimo, aprovado };
       });
 
       document.getElementById("resultado").innerHTML = `
         <strong>Tema: ${tema}</strong>
+        <br>
+        <small>Quórum considerado: ${quorum === "tresquintos" ? "3/5 (PEC)" : "Maioria simples (50% + 1)"}</small>
         <ul>
           ${resultado.map((r) => `
             <li>${r.casa}: ${r.votosFavor} votos favoráveis (mínimo ${r.minimo}) —
