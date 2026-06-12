@@ -8,4 +8,4 @@ Website estático para visualizar:
 
 ## Como usar
 
-Abra `/home/runner/work/OlhoDoBrasil/OlhoDoBrasil/CaioAndersonMM/OlhoDoBrasil/index.html` no navegador.
+Abra `index.html` no navegador.
