@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Olho do Brasil — Congresso Nacional</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0d1117;
+      --panel: #161b22;
+      --text: #e6edf3;
+      --muted: #9ca3af;
+      --left: #2563eb;
+      --center: #f59e0b;
+      --right: #dc2626;
+      --ok: #16a34a;
+      --bad: #ef4444;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    main { max-width: 1000px; margin: 0 auto; padding: 1rem; }
+    h1, h2 { margin: 0.2rem 0 0.8rem; }
+    section {
+      background: var(--panel);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+    }
+    .houses {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .bars { display: grid; gap: 0.4rem; }
+    .bar {
+      display: grid;
+      grid-template-columns: 70px 1fr auto;
+      gap: 0.6rem;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+    .track { background: #30363d; border-radius: 8px; overflow: hidden; height: 10px; }
+    .fill { height: 100%; }
+    .left { background: var(--left); }
+    .center { background: var(--center); }
+    .right { background: var(--right); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #30363d; padding: 0.55rem; text-align: left; }
+    small { color: var(--muted); }
+    select, button {
+      padding: 0.5rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #0f172a;
+      color: var(--text);
+    }
+    button { cursor: pointer; }
+    #resultado {
+      margin-top: 0.8rem;
+      padding: 0.7rem;
+      border-radius: 8px;
+      background: #111827;
+    }
+    .ok { color: var(--ok); font-weight: bold; }
+    .bad { color: var(--bad); font-weight: bold; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Olho do Brasil</h1>
+    <p><small>Painel inicial sobre a disposição do Congresso Nacional e cenários de votação.</small></p>
+
+    <section>
+      <h2>Composição das Casas</h2>
+      <div class="houses" id="casas"></div>
+    </section>
+
+    <section>
+      <h2>Simulador de Votação</h2>
+      <label for="tema">Tema:</label>
+      <select id="tema"></select>
+      <button type="button" id="simular">Simular</button>
+      <div id="resultado" aria-live="polite"></div>
+    </section>
+
+    <section>
+      <h2>Histórico de Posições e Emendas</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Parlamentar</th>
+            <th>Casa</th>
+            <th>Partido</th>
+            <th>Posição recente</th>
+            <th>Emendas (R$ mi)</th>
+          </tr>
+        </thead>
+        <tbody id="historico"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const casas = [
+      { nome: "Câmara dos Deputados", total: 513, inclinacao: { esquerda: 180, centro: 170, direita: 163 } },
+      { nome: "Senado Federal", total: 81, inclinacao: { esquerda: 24, centro: 27, direita: 30 } }
+    ];
+
+    const temas = {
+      "Reforma Tributária": { esquerda: 0.85, centro: 0.6, direita: 0.35 },
+      "Segurança Pública": { esquerda: 0.42, centro: 0.65, direita: 0.86 },
+      "Educação Básica": { esquerda: 0.9, centro: 0.75, direita: 0.55 }
+    };
+
+    const historicoParlamentar = [
+      { nome: "Ana Souza", casa: "Câmara", partido: "PSB", posicao: "Favorável à Reforma Tributária", emendasMi: 12.5 },
+      { nome: "Carlos Lima", casa: "Senado", partido: "PSD", posicao: "Ajustes em Segurança Pública", emendasMi: 8.1 },
+      { nome: "Marina Rocha", casa: "Câmara", partido: "PL", posicao: "Contrária ao texto-base da Reforma Tributária", emendasMi: 10.4 },
+      { nome: "João Mendes", casa: "Senado", partido: "PT", posicao: "Favorável à ampliação de recursos da Educação", emendasMi: 9.7 }
+    ];
+
+    function percentual(valor, total) {
+      return ((valor / total) * 100).toFixed(1);
+    }
+
+    function renderCasas() {
+      const el = document.getElementById("casas");
+      el.innerHTML = casas.map((casa) => `
+        <article>
+          <h3>${casa.nome}</h3>
+          <small>${casa.total} cadeiras</small>
+          <div class="bars">
+            <div class="bar">
+              <span>Esquerda</span>
+              <div class="track"><div class="fill left" style="width:${percentual(casa.inclinacao.esquerda, casa.total)}%"></div></div>
+              <span>${casa.inclinacao.esquerda}</span>
+            </div>
+            <div class="bar">
+              <span>Centro</span>
+              <div class="track"><div class="fill center" style="width:${percentual(casa.inclinacao.centro, casa.total)}%"></div></div>
+              <span>${casa.inclinacao.centro}</span>
+            </div>
+            <div class="bar">
+              <span>Direita</span>
+              <div class="track"><div class="fill right" style="width:${percentual(casa.inclinacao.direita, casa.total)}%"></div></div>
+              <span>${casa.inclinacao.direita}</span>
+            </div>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function simularVotacao() {
+      const tema = document.getElementById("tema").value;
+      const apoio = temas[tema];
+
+      const resultado = casas.map((casa) => {
+        const votosFavor = Math.round(
+          casa.inclinacao.esquerda * apoio.esquerda +
+          casa.inclinacao.centro * apoio.centro +
+          casa.inclinacao.direita * apoio.direita
+        );
+        const minimo = Math.floor(casa.total / 2) + 1;
+        const aprovado = votosFavor >= minimo;
+        return { casa: casa.nome, votosFavor, minimo, aprovado };
+      });
+
+      document.getElementById("resultado").innerHTML = `
+        <strong>Tema: ${tema}</strong>
+        <ul>
+          ${resultado.map((r) => `
+            <li>${r.casa}: ${r.votosFavor} votos favoráveis (mínimo ${r.minimo}) —
+            <span class="${r.aprovado ? "ok" : "bad"}">${r.aprovado ? "Aprovado" : "Rejeitado"}</span></li>
+          `).join("")}
+        </ul>
+      `;
+    }
+
+    function renderHistorico() {
+      document.getElementById("historico").innerHTML = historicoParlamentar.map((p) => `
+        <tr>
+          <td>${p.nome}</td>
+          <td>${p.casa}</td>
+          <td>${p.partido}</td>
+          <td>${p.posicao}</td>
+          <td>${p.emendasMi.toFixed(1)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function init() {
+      const select = document.getElementById("tema");
+      select.innerHTML = Object.keys(temas).map((tema) => `<option value="${tema}">${tema}</option>`).join("");
+      document.getElementById("simular").addEventListener("click", simularVotacao);
+      renderCasas();
+      renderHistorico();
+      simularVotacao();
+    }
+
+    init();
+  </script>
+</body>
+</html>
